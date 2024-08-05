@@ -36,11 +36,15 @@ int getDirection(unsigned long pulseWidth) {
     return -1;
   } 
   else if (pulseWidth < joyMid - directionDeadzone) {
-    /* if joystick is "below" deadzone
+    /* if joystick is "below" deadzone writeMotor
      * return "up" direction since right joystick is reversed
     */
     return 1;
   }
+}
+
+int average(int a, int b){
+  return round((double(a) + double(b)) / 2.0);
 }
 
 // all pins must be PWM capable
@@ -50,20 +54,16 @@ const int lowerRightPin = 5;
 const int upperLeftPin = 6;
 const int upperRightPin = 7;
 
-void hover(){
-  
-}
-
-void motorFunction(Servo esc){ // When the power button is off, this function sends a message to the motors, turning them off.
+void writeMotor(Servo esc){ // When the power button is off, this function sends a message to the motors, turning them off.
   esc.writeMicroseconds(joyMid);
 }
 
-void motorFunction(Servo esc, int yDirection){
-  int escWrite = motorMonitorFunction(esc, yDirection).toInt();
+void writeMotor(Servo esc, int yDirection){
+  int escWrite = motorFunction(esc, yDirection).toInt();
   esc.writeMicroseconds(escWrite);
 }
 
-String motorMonitorFunction(Servo esc, int yDirection){
+String motorFunction(Servo esc, int yDirection){
   if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) { // if direction is forward & stick is above deadzone
     return String(map(leftJoyY, joyMin, joyMax, escMid, escMax)); // translate joystick Y position to ESC input range and write to corresponding ESC
   } 
@@ -96,10 +96,10 @@ void loop() {
     else {
       powered = false;
 
-      motorFunction(lowerLeftESC);
-      motorFunction(lowerRightESC);
-      motorFunction(upperLeftESC);
-      motorFunction(upperRightESC);
+      writeMotor(lowerLeftESC);
+      writeMotor(lowerRightESC);
+      writeMotor(upperLeftESC);
+      writeMotor(upperRightESC);
     }
   }
   else if (!buttonPressed) {
@@ -115,11 +115,11 @@ void loop() {
     }
 
     yDirection = getDirection(rightJoyY);
-    motorFunction(lowerLeftESC, yDirection);
-    motorFunction(lowerRightESC, yDirection);
-    motorFunction(upperLeftESC, yDirection);
-    motorFunction(upperRightESC, yDirection);
+    writeMotor(lowerLeftESC, yDirection);
+    writeMotor(lowerRightESC, yDirection);
+    writeMotor(upperLeftESC, yDirection);
+    writeMotor(upperRightESC, yDirection);
 
-    Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorMonitorFunction(upperRightESC, yDirection));
+    Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
   }
 }
