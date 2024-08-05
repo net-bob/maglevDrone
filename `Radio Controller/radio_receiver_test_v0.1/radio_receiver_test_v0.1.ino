@@ -11,7 +11,7 @@ int maxElevatorVal = 0;
 const int escMin = 920;
 const int escMid = 1460;
 const int escMax = 2000;
-const int deadzone = 30;
+const int deadzone = 30;123213
 
 int getDirection(unsigned long val){
   int middleVal = average(minElevatorVal, maxElevatorVal);
