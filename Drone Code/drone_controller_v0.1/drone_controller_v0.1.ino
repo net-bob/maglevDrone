@@ -117,8 +117,8 @@ void loop() {
     yDirection = getDirection(rightJoyY);
     writeMotor(lowerLeftESC, yDirection);
     writeMotor(lowerRightESC, yDirection);
-    writeMotor(upperLeftESC, yDirection);
-    writeMotor(upperRightESC, yDirection);
+    writeMotor(upperLeftESC, -yDirection);
+    writeMotor(upperRightESC, -yDirection);
 
     Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
   }
