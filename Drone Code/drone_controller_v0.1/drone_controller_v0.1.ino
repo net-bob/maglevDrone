@@ -18,7 +18,7 @@ const int rightJoystickYPin = 9;
 const int directionDeadzone = 100;  // This is how far the right joystick must be from the middle in order to register movement.
 const int speedDeadzone = 43;       // This is how far the left joystick must be from the bottom in order to register movement.
 int joyMid = 1470;
-int joyMax = 1920;                  // Min and max values are ONLY for the left joystick. Right joystick versions are (very roughly) reversed.
+int joyMax = 1920;    // Min and max values are ONLY for the left joystick. Right joystick versions are (very roughly) reversed.
 int joyMin = 950;
 
 unsigned long leftJoyY;
@@ -43,10 +43,6 @@ int getDirection(unsigned long pulseWidth) {
   }
 }
 
-int average(int a, int b){
-  return round((double(a) + double(b)) / 2.0);
-}
-
 // all pins must be PWM capable
 const int buttonPin = 2;
 const int lowerLeftPin = 4;
@@ -58,14 +54,14 @@ void writeMotor(Servo esc){ // When the power button is off, this function sends
   esc.writeMicroseconds(joyMid);
 }
 
-void writeMotor(Servo esc, int yDirection){
-  int escWrite = motorFunction(esc, yDirection).toInt();
+void writeMotor(Servo esc, int yDirection) {      
+  int escWrite = motorFunction(esc, yDirection).toInt(); // writes translated speed (from motorFunction) to called ESC
   esc.writeMicroseconds(escWrite);
 }
 
-String motorFunction(Servo esc, int yDirection){
-  if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) { // if direction is forward & stick is above deadzone
-    return String(map(leftJoyY, joyMin, joyMax, escMid, escMax)); // translate joystick Y position to ESC input range and write to corresponding ESC
+String motorFunction(Servo esc, int yDirection) {
+  if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) {     // if direction is forward & stick is above deadzone
+    return String(map(leftJoyY, joyMin, joyMax, escMid, escMax)); // translate joystick Y position to ESC input range & output as String
   } 
   else if (yDirection == -1 && leftJoyY > joyMin + speedDeadzone) {
     return String(map(leftJoyY, joyMin, joyMax, escMid, escMin));
@@ -86,9 +82,9 @@ void setup() {
 void loop() {
   leftJoyY = pulseIn(leftJoystickYPin, HIGH);
   rightJoyY = pulseIn(rightJoystickYPin, HIGH);
-  buttonPressed = (pulseIn(buttonPin, HIGH) > 1100) ? true : false;
+  buttonPressed = (pulseIn(buttonPin, HIGH) > 1100) ? true : false; // one-line if statement: if button is pressed, return true, else return false
 
-  if (buttonPressed && !buttonHeld) {
+  if (buttonPressed && !buttonHeld) { // if button is pressed, toggle "powered" variable (on/off button logic)
     buttonHeld = true;
     if (!powered) {
       powered = true;
@@ -106,19 +102,19 @@ void loop() {
     buttonHeld = false;
   }
 
-  if (powered) {
+  if (powered) { // if drone is on run this (main loop code)
     if (leftJoyY < joyMin) {
       joyMin = leftJoyY;
-    }
+    }                           // adaptive joystick parameter calculation. makes speed control slightly more precise
     if (leftJoyY > joyMax) {
       joyMax = leftJoyY;
     }
 
-    yDirection = getDirection(rightJoyY);
-    writeMotor(lowerLeftESC, yDirection);
+    yDirection = getDirection(rightJoyY);   // get direction from right joystick (forward, backward, middle)
+    writeMotor(lowerLeftESC, yDirection);   // write speed to ESCs according to left joystick position (unless direction is middle)
     writeMotor(lowerRightESC, yDirection);
-    writeMotor(upperLeftESC, -yDirection);
-    writeMotor(upperRightESC, -yDirection);
+    writeMotor(upperLeftESC, yDirection);
+    writeMotor(upperRightESC, yDirection);
 
     Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
   }
