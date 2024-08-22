@@ -43,10 +43,6 @@ int getDirection(unsigned long pulseWidth) {
   }
 }
 
-int average(int a, int b){
-  return round((double(a) + double(b)) / 2.0);
-}
-
 int calculateRotationsPerMinute(int pin){
   float deltaTime = pulseIn(A0, LOW);
   deltaTime /= 60000000.0;
