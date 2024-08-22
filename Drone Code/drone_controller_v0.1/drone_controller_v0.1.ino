@@ -20,26 +20,21 @@ const int speedDeadzone = 43;       // This is how far the left joystick must be
 int joyMid = 1470;
 int joyMax = 1920;    // Min and max values are ONLY for the left joystick. Right joystick versions are (very roughly) reversed.
 int joyMin = 950;
+int joyMinLift = 1750;  // Minimum left joystick value needed to generate a reasonable amount of lift. (PLACEHOLDER- actual value TBD)
 
 unsigned long leftJoyY;
 unsigned long rightJoyY;
 int yDirection;
 
-int getDirection(unsigned long pulseWidth) {
+int getDirection(unsigned long pulseWidth) { // uses right joystick
   if (joyMid - directionDeadzone < pulseWidth && pulseWidth < joyMid + directionDeadzone) { // if joystick is within deadzone
     return 0;
   } 
-  else if (pulseWidth > joyMid + directionDeadzone) {
-    /* if joystick is "above" deadzone 
-     * return "down" direction since right joystick is reversed
-    */ 
-    return -1;
+  else if (pulseWidth > joyMid + directionDeadzone) {  // if joystick is "above" deadzone
+    return -1;                                         // return "down" direction since right joystick is reversed
   } 
-  else if (pulseWidth < joyMid - directionDeadzone) {
-    /* if joystick is "below" deadzone writeMotor
-     * return "up" direction since right joystick is reversed
-    */
-    return 1;
+  else if (pulseWidth < joyMid - directionDeadzone) {  // if joystick is "below" deadzone
+    return 1;                                          // return "up" direction since right joystick is reversed
   }
 }
 
@@ -54,20 +49,35 @@ void writeMotor(Servo esc){ // When the power button is off, this function sends
   esc.writeMicroseconds(joyMid);
 }
 
-void writeMotor(Servo esc, int yDirection) {      
-  int escWrite = motorFunction(esc, yDirection).toInt(); // writes translated speed (from motorFunction) to called ESC
-  esc.writeMicroseconds(escWrite);
+void writeMotor(Servo lowerLeftESC, Servo lowerRightESC, Servo upperLeftESC, Servo upperRightESC, int yDirection) {   // writes translated speeds (from motorFunction) to all ESCs
+  lowerLeftESC.writeMicroseconds(backMotorFunction(yDirection).toInt());
+  lowerRightESC.writeMicroseconds(backMotorFunction(yDirection).toInt());
+  upperLeftESC.writeMicroseconds(frontMotorFunction(yDirection).toInt());
+  upperRightESC.writeMicroseconds(frontMotorFunction(yDirection).toInt());
 }
 
-String motorFunction(Servo esc, int yDirection) {
-  if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) {     // if direction is forward & stick is above deadzone
-    return String(map(leftJoyY, joyMin, joyMax, escMid, escMax)); // translate joystick Y position to ESC input range & output as String
+String backMotorFunction(int yDirection) { // uses left joystick
+  if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) {                  // if direction is forward & stick is above deadzone
+    int liftedRangeInput = map(leftJoyY, joyMin, joyMax, joyMinLift, joyMax);  // translate joystick Y position to range above minimum throttle for lift
+    return String(map(liftedRangeInput, joyMinLift, joyMax, escMid, escMax));  // translate that modified joystick position to ESC forward input range & output as String
   } 
   else if (yDirection == -1 && leftJoyY > joyMin + speedDeadzone) {
-    return String(map(leftJoyY, joyMin, joyMax, escMid, escMin));
+    return String(map(leftJoyY, joyMin, joyMax, escMid, escMin));  // translate speed from forward joyMinLift to reversed max based on joystick movement, with workaround for extremely slow speeds to avoid motor dip/stop
   } 
-  else {
-    return String(escMid);
+  else {                                                               // if no direction (stationary)
+    return String(map(joyMinLift, joyMin, joyMax, escMid, escMax));    // translate minimum throttle level required to generate lift to ESC forward input range
+  }
+}
+
+String frontMotorFunction(int yDirection) { // uses left joystick
+  if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) {     // if direction is forward & stick is above deadzone
+    return String(map(leftJoyY, joyMin, joyMax, escMid, escMax)); // translate speed from reversed joyMinLift to forward max based on joystick movement, with workaround for extremely slow speeds to avoid motor dip/stop
+  } 
+  else if (yDirection == -1 && leftJoyY > joyMin + speedDeadzone) {
+    return String(map(leftJoyY, joyMin, joyMax, escMid, escMin)); // translate speed from reversed joyMinLift to reversed max based on joystick movement
+  } 
+  else {                                                               // if no direction (stationary)
+    return String(map(joyMinLift, joyMin, joyMax, escMid, escMin));    // translate minimum throttle level required to generate lift to ESC backward input range
   }
 }
 
