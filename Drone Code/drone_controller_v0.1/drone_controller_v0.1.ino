@@ -38,6 +38,18 @@ int getDirection(unsigned long pulseWidth) { // uses right joystick
   }
 }
 
+int calculateRotationsPerMinute(int pin){
+  float deltaTime = pulseIn(A0, LOW);
+  deltaTime /= 60000000.0;
+  return (1 / deltaTime);
+}
+
+int calculateRotationsPerSecond(int pin){
+  float deltaTime = pulseIn(A0, LOW);
+  deltaTime /= 1000000.0;
+  return (1 / deltaTime);
+}
+
 // all pins must be PWM capable
 const int buttonPin = 2;
 const int lowerLeftPin = 4;
