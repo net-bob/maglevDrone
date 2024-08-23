@@ -39,13 +39,13 @@ int getDirection(unsigned long pulseWidth) { // uses right joystick
 }
 
 int calculateRotationsPerMinute(int pin){
-  float deltaTime = pulseIn(A0, LOW);
+  float deltaTime = pulseIn(pin, LOW);
   deltaTime /= 60000000.0;
   return (1 / deltaTime);
 }
 
 int calculateRotationsPerSecond(int pin){
-  float deltaTime = pulseIn(A0, LOW);
+  float deltaTime = pulseIn(pin, LOW);
   deltaTime /= 1000000.0;
   return (1 / deltaTime);
 }
@@ -132,12 +132,13 @@ void loop() {
       joyMax = leftJoyY;
     }
 
-    yDirection = getDirection(rightJoyY);   // get direction from right joystick (forward, backward, middle)
-    writeMotor(lowerLeftESC, yDirection);   // write speed to ESCs according to left joystick position (unless direction is middle)
-    writeMotor(lowerRightESC, yDirection);
-    writeMotor(upperLeftESC, yDirection);
-    writeMotor(upperRightESC, yDirection);
+    // yDirection = getDirection(rightJoyY);   // get direction from right joystick (forward, backward, middle)
+    // writeMotor(lowerLeftESC, yDirection);   // write speed to ESCs according to left joystick position (unless direction is middle)
+    // writeMotor(lowerRightESC, yDirection);
+    // writeMotor(upperLeftESC, yDirection);
+    // writeMotor(upperRightESC, yDirection);
 
-    Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
+    // Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
+    Serial.println(calculateRotationsPerSecond(2));
   }
 }
