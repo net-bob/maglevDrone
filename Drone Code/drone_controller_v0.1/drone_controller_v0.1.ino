@@ -38,7 +38,7 @@ int getDirection(unsigned long pulseWidth) { // uses right joystick
   }
 }
 
-int calculateRotationsPerMinute(int pin){
+int calculateRotationsPerMinute(int pin){  // use in main loop function to calculate RPM from each opto-isolator
   float deltaTime = pulseIn(pin, LOW);
   deltaTime /= 60000000.0;
   return (1 / deltaTime);
@@ -61,7 +61,7 @@ void writeMotor(Servo esc){ // When the power button is off, this function sends
   esc.writeMicroseconds(joyMid);
 }
 
-void writeMotor(Servo lowerLeftESC, Servo lowerRightESC, Servo upperLeftESC, Servo upperRightESC, int yDirection) {   // writes translated speeds (from motorFunction) to all ESCs
+void writeMotors(Servo lowerLeftESC, Servo lowerRightESC, Servo upperLeftESC, Servo upperRightESC, int yDirection) {   // writes translated speeds (from motorFunction) to all ESCs
   lowerLeftESC.writeMicroseconds(backMotorFunction(yDirection).toInt());
   lowerRightESC.writeMicroseconds(backMotorFunction(yDirection).toInt());
   upperLeftESC.writeMicroseconds(frontMotorFunction(yDirection).toInt());
@@ -74,7 +74,7 @@ String backMotorFunction(int yDirection) { // uses left joystick
     return String(map(liftedRangeInput, joyMinLift, joyMax, escMid, escMax));  // translate that modified joystick position to ESC forward input range & output as String
   } 
   else if (yDirection == -1 && leftJoyY > joyMin + speedDeadzone) {
-    return String(map(leftJoyY, joyMin, joyMax, escMid, escMin));  // translate speed from forward joyMinLift to reversed max based on joystick movement, with workaround for extremely slow speeds to avoid motor dip/stop
+    // translate speed from forward joyMinLift to reversed max based on joystick movement, with workaround for extremely slow speeds to avoid motor dip/stop (NEED TO MAKE)
   } 
   else {                                                               // if no direction (stationary)
     return String(map(joyMinLift, joyMin, joyMax, escMid, escMax));    // translate minimum throttle level required to generate lift to ESC forward input range
@@ -83,10 +83,10 @@ String backMotorFunction(int yDirection) { // uses left joystick
 
 String frontMotorFunction(int yDirection) { // uses left joystick
   if (yDirection == 1 && leftJoyY > joyMin + speedDeadzone) {     // if direction is forward & stick is above deadzone
-    return String(map(leftJoyY, joyMin, joyMax, escMid, escMax)); // translate speed from reversed joyMinLift to forward max based on joystick movement, with workaround for extremely slow speeds to avoid motor dip/stop
+    // translate speed from reversed joyMinLift to forward max based on joystick movement, with workaround for extremely slow speeds to avoid motor dip/stop (NEED TO MAKE)
   } 
   else if (yDirection == -1 && leftJoyY > joyMin + speedDeadzone) {
-    return String(map(leftJoyY, joyMin, joyMax, escMid, escMin)); // translate speed from reversed joyMinLift to reversed max based on joystick movement
+   // translate speed from reversed joyMinLift to reversed max based on joystick movement (NEED TO MAKE)
   } 
   else {                                                               // if no direction (stationary)
     return String(map(joyMinLift, joyMin, joyMax, escMid, escMin));    // translate minimum throttle level required to generate lift to ESC backward input range
@@ -132,13 +132,8 @@ void loop() {
       joyMax = leftJoyY;
     }
 
-    // yDirection = getDirection(rightJoyY);   // get direction from right joystick (forward, backward, middle)
-    // writeMotor(lowerLeftESC, yDirection);   // write speed to ESCs according to left joystick position (unless direction is middle)
-    // writeMotor(lowerRightESC, yDirection);
-    // writeMotor(upperLeftESC, yDirection);
-    // writeMotor(upperRightESC, yDirection);
+    writeMotors(lowerLeftESC, lowerRightESC, upperLeftESC, upperRightESC, yDirection);
 
-    // Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
-    Serial.println(calculateRotationsPerSecond(2));
+    Serial.println("Left joystick Y: " + String(leftJoyY) + ", Right joystick direction: " + String(getDirection(rightJoyY)) + ", Speed: " + motorFunction(upperRightESC, yDirection));
   }
 }
